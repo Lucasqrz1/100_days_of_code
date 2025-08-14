@@ -1,137 +1,244 @@
-class TicTacToe:
-    def __init__(self):
-        # Think of the board like a 3x3 grid of empty spaces
-        self.board = [' ' for _ in range(9)]  # 9 positions numbered 1-9
-        self.current_player = 'X'  # X always goes first
-    
-    def display_board(self):
-        """Show the current board state"""
-        print("\n Current Board:")
-        print("   |   |   ")
-        print(f" {self.board[0]} | {self.board[1]} | {self.board[2]} ")
-        print("___|___|___")
-        print("   |   |   ")
-        print(f" {self.board[3]} | {self.board[4]} | {self.board[5]} ")
-        print("___|___|___")
-        print("   |   |   ")
-        print(f" {self.board[6]} | {self.board[7]} | {self.board[8]} ")
-        print("   |   |   ")
-        
-        # Show position numbers for reference
-        print("\n Position numbers:")
-        print("   |   |   ")
-        print(" 1 | 2 | 3 ")
-        print("___|___|___")
-        print("   |   |   ")
-        print(" 4 | 5 | 6 ")
-        print("___|___|___")
-        print("   |   |   ")
-        print(" 7 | 8 | 9 ")
-        print("   |   |   ")
+import tkinter as tk
+from tkinter import ttk, filedialog, messagebox, colorchooser
+from PIL import Image, ImageTk, ImageDraw, ImageFont
+import os
 
+class WatermarkApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Image Watermark Studio")
+        self.root.geometry("800x600")
+        self.root.configure(bg='#f0f0f0')
+        
+        # Variables to store our data
+        self.original_image = None
+        self.watermarked_image = None
+        self.preview_image = None
+        self.watermark_text = tk.StringVar(value="© Your Watermark")
+        self.font_size = tk.IntVar(value=36)
+        self.opacity = tk.IntVar(value=128)  # 0-255 scale
+        self.text_color = "#FFFFFF"  # White by default
+        
+        self.setup_gui()
     
-    def is_valid_move(self, position):
-        """Check if the move is allowed"""
-        # Position must be 1-9 and that spot must be empty
-        return 1 <= position <= 9 and self.board[position - 1] == ' '
+    def setup_gui(self):
+        """Create all the buttons, labels, and layout"""
+        # Title
+        title_label = tk.Label(self.root, text="🖼️ Image Watermark Studio", 
+                              font=("Arial", 16, "bold"), bg='#f0f0f0')
+        title_label.pack(pady=10)
+        
+        # Main container
+        main_frame = ttk.Frame(self.root)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=10)
+        
+        # Left side - Controls
+        controls_frame = ttk.LabelFrame(main_frame, text="Watermark Controls", padding=10)
+        controls_frame.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 10))
+        
+        # Upload button
+        upload_btn = ttk.Button(controls_frame, text="📁 Upload Image", 
+                               command=self.upload_image, width=20)
+        upload_btn.pack(pady=5)
+        
+        # Watermark text input
+        ttk.Label(controls_frame, text="Watermark Text:").pack(pady=(10, 2))
+        text_entry = ttk.Entry(controls_frame, textvariable=self.watermark_text, width=25)
+        text_entry.pack(pady=2)
+        
+        # Font size slider
+        ttk.Label(controls_frame, text="Font Size:").pack(pady=(10, 2))
+        font_slider = ttk.Scale(controls_frame, from_=12, to=72, 
+                               variable=self.font_size, orient=tk.HORIZONTAL)
+        font_slider.pack(fill=tk.X, pady=2)
+        ttk.Label(controls_frame, textvariable=self.font_size).pack()
+        
+        # Opacity slider
+        ttk.Label(controls_frame, text="Opacity (Transparency):").pack(pady=(10, 2))
+        opacity_slider = ttk.Scale(controls_frame, from_=50, to=255, 
+                                  variable=self.opacity, orient=tk.HORIZONTAL)
+        opacity_slider.pack(fill=tk.X, pady=2)
+        ttk.Label(controls_frame, textvariable=self.opacity).pack()
+        
+        # Color picker button
+        color_btn = ttk.Button(controls_frame, text="🎨 Choose Text Color", 
+                              command=self.choose_color, width=20)
+        color_btn.pack(pady=10)
+        
+        # Preview button
+        preview_btn = ttk.Button(controls_frame, text="👁️ Preview Watermark", 
+                                command=self.preview_watermark, width=20)
+        preview_btn.pack(pady=5)
+        
+        # Save button
+        save_btn = ttk.Button(controls_frame, text="💾 Save Image", 
+                             command=self.save_image, width=20)
+        save_btn.pack(pady=5)
+        
+        # Right side - Image preview
+        self.preview_frame = ttk.LabelFrame(main_frame, text="Image Preview", padding=10)
+        self.preview_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        
+        # Canvas for image display
+        self.canvas = tk.Canvas(self.preview_frame, bg='white', width=400, height=400)
+        self.canvas.pack(fill=tk.BOTH, expand=True)
+        
+        # Instructions label
+        self.info_label = ttk.Label(self.preview_frame, 
+                                   text="Upload an image to get started!", 
+                                   foreground='gray')
+        self.info_label.pack(pady=10)
     
-    def make_move(self, position):
-        """Place the current player's symbol on the board"""
-        if self.is_valid_move(position):
-            self.board[position - 1] = self.current_player
-            return True
-        return False
-    
-    def check_winner(self):
-        """Check if someone won the game"""
-        # All possible winning combinations (like connecting the dots)
-        winning_combinations = [
-            # Rows
-            [0, 1, 2], [3, 4, 5], [6, 7, 8],
-            # Columns  
-            [0, 3, 6], [1, 4, 7], [2, 5, 8],
-            # Diagonals
-            [0, 4, 8], [2, 4, 6]
+    def upload_image(self):
+        """Let user select an image file"""
+        file_types = [
+            ("Image files", "*.jpg *.jpeg *.png *.bmp *.gif *.tiff"),
+            ("All files", "*.*")
         ]
         
-        for combo in winning_combinations:
-            if (self.board[combo[0]] == self.board[combo[1]] == 
-                self.board[combo[2]] != ' '):
-                return self.board[combo[0]]  # Return the winner (X or O)
+        filename = filedialog.askopenfilename(
+            title="Select an image",
+            filetypes=file_types
+        )
         
-        return None  # No winner yet
-    
-    def is_board_full(self):
-        """Check if all spaces are taken"""
-        return ' ' not in self.board
-    
-    def switch_player(self):
-        """Switch between X and O"""
-        self.current_player = 'O' if self.current_player == 'X' else 'X'
-    
-    def play_game(self):
-        """Main game loop - like the game's heartbeat"""
-        print("Welcome to Tic Tac Toe!")
-        print("Players take turns placing X and O")
-        print("First to get 3 in a row wins!")
-        
-        while True:
-            self.display_board()
-            
-            # Get player's move
+        if filename:
             try:
-                print(f"\nPlayer {self.current_player}'s turn")
-                position = int(input("Choose position (1-9): "))
-            except ValueError:
-                print("Please enter a number between 1 and 9!")
-                continue
-            
-            # Try to make the move
-            if not self.make_move(position):
-                print("Invalid move! Try again.")
-                continue
-            
-            # Check if someone won
-            winner = self.check_winner()
-            if winner:
-                self.display_board()
-                print(f"\n🎉 Player {winner} wins! 🎉")
-                break
-            
-            # Check if it's a tie
-            if self.is_board_full():
-                self.display_board()
-                print("\n🤝 It's a tie! Good game!")
-                break
-            
-            # Switch to the other player
-            self.switch_player()
+                # Load the image
+                self.original_image = Image.open(filename)
+                self.display_image(self.original_image)
+                self.info_label.config(text=f"Loaded: {os.path.basename(filename)}")
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not open image: {str(e)}")
     
-    def play_again(self):
-        """Ask if players want another round"""
-        while True:
-            choice = input("\nPlay again? (y/n): ").lower()
-            if choice in ['y', 'yes']:
-                return True
-            elif choice in ['n', 'no']:
-                return False
-            else:
-                print("Please enter 'y' for yes or 'n' for no")
-
-def main():
-    """Start the game"""
-    print("=" * 40)
-    print("  TIC TAC TOE - TEXT VERSION")
-    print("=" * 40)
-    
-    while True:
-        game = TicTacToe()
-        game.play_game()
+    def display_image(self, image):
+        """Show image in the canvas, resized to fit"""
+        if not image:
+            return
+            
+        # Calculate size to fit in canvas while keeping aspect ratio
+        canvas_width = self.canvas.winfo_width()
+        canvas_height = self.canvas.winfo_height()
         
-        if not game.play_again():
-            print("Thanks for playing! Goodbye! 👋")
-            break
+        # If canvas isn't ready, use default size
+        if canvas_width <= 1:
+            canvas_width = 400
+            canvas_height = 400
+        
+        # Calculate the scaling factor
+        img_width, img_height = image.size
+        scale_x = canvas_width / img_width
+        scale_y = canvas_height / img_height
+        scale = min(scale_x, scale_y, 1.0)  # Don't scale up
+        
+        # Resize image
+        new_width = int(img_width * scale)
+        new_height = int(img_height * scale)
+        display_img = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        
+        # Convert to PhotoImage for tkinter
+        self.preview_image = ImageTk.PhotoImage(display_img)
+        
+        # Clear canvas and show image
+        self.canvas.delete("all")
+        self.canvas.create_image(canvas_width//2, canvas_height//2, 
+                               image=self.preview_image, anchor=tk.CENTER)
+    
+    def choose_color(self):
+        """Open color picker for text color"""
+        color = colorchooser.askcolor(title="Choose watermark color")
+        if color[1]:  # color[1] is the hex value
+            self.text_color = color[1]
+    
+    def preview_watermark(self):
+        """Create and show watermarked image"""
+        if not self.original_image:
+            messagebox.showwarning("Warning", "Please upload an image first!")
+            return
+        
+        try:
+            # Create a copy of the original image
+            watermarked = self.original_image.copy()
+            
+            # Create a transparent overlay for the text
+            overlay = Image.new('RGBA', watermarked.size, (255, 255, 255, 0))
+            draw = ImageDraw.Draw(overlay)
+            
+            # Try to load a font, fall back to default if not available
+            try:
+                font = ImageFont.truetype("arial.ttf", self.font_size.get())
+            except:
+                try:
+                    font = ImageFont.load_default()
+                except:
+                    font = ImageFont.load_default()
+            
+            # Get text size for positioning
+            text = self.watermark_text.get()
+            bbox = draw.textbbox((0, 0), text, font=font)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+            
+            # Position text in bottom right corner
+            x = watermarked.size[0] - text_width - 20
+            y = watermarked.size[1] - text_height - 20
+            
+            # Convert hex color to RGB
+            hex_color = self.text_color.lstrip('#')
+            rgb_color = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+            text_color = rgb_color + (self.opacity.get(),)  # Add alpha
+            
+            # Draw the text on overlay
+            draw.text((x, y), text, fill=text_color, font=font)
+            
+            # Combine original image with overlay
+            if watermarked.mode != 'RGBA':
+                watermarked = watermarked.convert('RGBA')
+            
+            self.watermarked_image = Image.alpha_composite(watermarked, overlay)
+            
+            # Display the watermarked image
+            self.display_image(self.watermarked_image)
+            self.info_label.config(text="Preview ready! You can now save the image.")
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not create watermark: {str(e)}")
+    
+    def save_image(self):
+        """Save the watermarked image"""
+        if not self.watermarked_image:
+            messagebox.showwarning("Warning", "Please preview the watermark first!")
+            return
+        
+        # Ask user where to save
+        filename = filedialog.asksaveasfilename(
+            title="Save watermarked image",
+            defaultextension=".png",
+            filetypes=[
+                ("PNG files", "*.png"),
+                ("JPEG files", "*.jpg"),
+                ("All files", "*.*")
+            ]
+        )
+        
+        if filename:
+            try:
+                # Convert back to RGB if saving as JPEG
+                if filename.lower().endswith(('.jpg', '.jpeg')):
+                    # Create white background for JPEG
+                    rgb_image = Image.new('RGB', self.watermarked_image.size, (255, 255, 255))
+                    rgb_image.paste(self.watermarked_image, mask=self.watermarked_image.split()[-1])
+                    rgb_image.save(filename, quality=95)
+                else:
+                    self.watermarked_image.save(filename)
+                
+                messagebox.showinfo("Success", f"Image saved as: {filename}")
+                self.info_label.config(text=f"Saved: {os.path.basename(filename)}")
+                
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not save image: {str(e)}")
 
-# Run the game
+# Create and run the application
 if __name__ == "__main__":
-    main()
+    root = tk.Tk()
+    app = WatermarkApp(root)
+    root.mainloop()
