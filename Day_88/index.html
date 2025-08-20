@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkCafe - Find Your Perfect Remote Work Spot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .search-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #667eea;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            background: #f0f0f0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .cafe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .cafe-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .cafe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .cafe-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .cafe-address {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .amenities {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .amenity {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .wifi { background: #e3f2fd; color: #1565c0; }
+        .power { background: #f3e5f5; color: #7b1fa2; }
+        .quiet { background: #e8f5e8; color: #2e7d32; }
+        .coffee { background: #fff3e0; color: #ef6c00; }
+
+        .cafe-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .stars {
+            color: #ffc107;
+        }
+
+        .rating-text {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .cafe-hours {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .no-results {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            margin-top: 50px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .cafe-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>☕ WorkCafe</h1>
+            <p class="subtitle">Find the perfect cafe for remote work</p>
+        </header>
+
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Search cafes by name or location..." id="searchInput">
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">All Cafes</button>
+                <button class="filter-btn" data-filter="wifi">Strong WiFi</button>
+                <button class="filter-btn" data-filter="power">Power Outlets</button>
+                <button class="filter-btn" data-filter="quiet">Quiet Space</button>
+            </div>
+        </div>
+
+        <div class="cafe-grid" id="cafeGrid">
+            <!-- Cafes will be populated by JavaScript -->
+        </div>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            No cafes found matching your criteria
+        </div>
+    </div>
+
+    <script>
+        const cafes = [
+            {
+                name: "Code & Coffee",
+                address: "123 Tech Street, Downtown",
+                amenities: ["wifi", "power", "quiet"],
+                rating: 4.8,
+                hours: "6:00 AM - 10:00 PM",
+                description: "Perfect for developers with fast internet and plenty of outlets"
+            },
+            {
+                name: "The Digital Den",
+                address: "456 Innovation Ave, Midtown",
+                amenities: ["wifi", "power", "coffee"],
+                rating: 4.6,
+                hours: "7:00 AM - 9:00 PM",
+                description: "Cozy atmosphere with excellent coffee and reliable WiFi"
+            },
+            {
+                name: "Quiet Corner Cafe",
+                address: "789 Peaceful Blvd, Uptown",
+                amenities: ["wifi", "quiet", "coffee"],
+                rating: 4.5,
+                hours: "8:00 AM - 6:00 PM",
+                description: "Tranquil environment perfect for focused work sessions"
+            },
+            {
+                name: "Power House Coffee",
+                address: "321 Energy Street, Business District",
+                amenities: ["wifi", "power", "coffee"],
+                rating: 4.7,
+                hours: "5:30 AM - 11:00 PM",
+                description: "Outlets at every table and lightning-fast internet"
+            },
+            {
+                name: "Startup Sanctuary",
+                address: "654 Entrepreneur Lane, Tech Hub",
+                amenities: ["wifi", "power", "quiet", "coffee"],
+                rating: 4.9,
+                hours: "24/7",
+                description: "The ultimate workspace cafe with all amenities"
+            },
+            {
+                name: "Bean & Bandwidth",
+                address: "987 Connect Street, University Area",
+                amenities: ["wifi", "coffee"],
+                rating: 4.3,
+                hours: "6:00 AM - 8:00 PM",
+                description: "Great coffee and reliable internet for students and freelancers"
+            },
+            {
+                name: "Silent Sips",
+                address: "147 Whisper Way, Library District",
+                amenities: ["quiet", "coffee"],
+                rating: 4.4,
+                hours: "7:00 AM - 7:00 PM",
+                description: "Library-quiet atmosphere for deep focus work"
+            },
+            {
+                name: "WiFi Wonderland",
+                address: "258 Signal Street, Central",
+                amenities: ["wifi", "power"],
+                rating: 4.2,
+                hours: "6:30 AM - 9:30 PM",
+                description: "Blazing fast internet speeds and charging stations everywhere"
+            }
+        ];
+
+        function getAmenityIcon(amenity) {
+            const icons = {
+                wifi: "📶 Strong WiFi",
+                power: "🔌 Power Outlets",
+                quiet: "🤫 Quiet Space",
+                coffee: "☕ Great Coffee"
+            };
+            return icons[amenity] || amenity;
+        }
+
+        function createCafeCard(cafe) {
+            const stars = "⭐".repeat(Math.floor(cafe.rating));
+            const amenityTags = cafe.amenities.map(amenity => 
+                `<span class="amenity ${amenity}">${getAmenityIcon(amenity)}</span>`
+            ).join("");
+
+            return `
+                <div class="cafe-card" data-amenities="${cafe.amenities.join(' ')}">
+                    <div class="cafe-name">${cafe.name}</div>
+                    <div class="cafe-address">📍 ${cafe.address}</div>
+                    <div class="cafe-rating">
+                        <span class="stars">${stars}</span>
+                        <span class="rating-text">${cafe.rating} (${Math.floor(Math.random() * 100 + 50)} reviews)</span>
+                    </div>
+                    <div class="amenities">
+                        ${amenityTags}
+                    </div>
+                    <div class="cafe-hours">🕒 ${cafe.hours}</div>
+                </div>
+            `;
+        }
+
+        function renderCafes(cafesToRender = cafes) {
+            const grid = document.getElementById('cafeGrid');
+            const noResults = document.getElementById('noResults');
+            
+            if (cafesToRender.length === 0) {
+                grid.style.display = 'none';
+                noResults.style.display = 'block';
+            } else {
+                grid.style.display = 'grid';
+                noResults.style.display = 'none';
+                grid.innerHTML = cafesToRender.map(createCafeCard).join('');
+            }
+        }
+
+        function filterCafes() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+            
+            let filteredCafes = cafes.filter(cafe => {
+                const matchesSearch = cafe.name.toLowerCase().includes(searchTerm) || 
+                                    cafe.address.toLowerCase().includes(searchTerm);
+                
+                const matchesFilter = activeFilter === 'all' || cafe.amenities.includes(activeFilter);
+                
+                return matchesSearch && matchesFilter;
+            });
+            
+            renderCafes(filteredCafes);
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterCafes);
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                filterCafes();
+            });
+        });
+
+        // Initial render
+        renderCafes();
+    </script>
+</body>
+</html>
