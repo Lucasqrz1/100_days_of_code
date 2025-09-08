@@ -659,7 +659,7 @@
 657,657,ESA,"ELV-1 (SLV), Guiana Space Centre, French Guiana, France","Mon Feb 13, 2012 10:00 UTC","Vega | Lares, AlmaSat-1 & 7 cubesats",StatusActive,37.0,Success
 658,658,ISA,"Imam Khomeini Spaceport, Semnan Space Center, Iran","Fri Feb 03, 2012",Safir-1B | Navid,StatusRetired,,Success
 659,659,ULA,"SLC-37B, Cape Canaveral AFS, Florida, USA","Fri Jan 20, 2012 00:38 UTC","Delta IV Medium+ (5,4) | WGS-4",StatusRetired,,Success
-660,660,Arianespace,"ELS, Guiana Space Centre, French Guiana, France","Sat Dec 17, 2011 02:03 UTC","Soyuz ST-A/Fregat | Pl??iades 1A, SSOT, Elisa",StatusActive,80.0,Success
+660,660,Arianespace,"ELS, Guiana Space Centre, French Guiana, France","Sat Dec 17, monthly_distribution = df_data['Date'].dt.month.astype(int).value_counts().sort_index() 02:03 UTC","Soyuz ST-A/Fregat | Pl??iades 1A, SSOT, Elisa",StatusActive,80.0,Success
 661,661,MHI,"LA-Y1, Tanegashima Space Center, Japan","Mon Dec 12, 2011 01:21 UTC",H-IIA 202 | IGS-Radar 3,StatusActive,90.0,Success
 662,662,ULA,"SLC-41, Cape Canaveral AFS, Florida, USA","Sat Nov 26, 2011 15:02 UTC",Atlas V 541 | Mars Science Laboratory,StatusActive,145.0,Success
 663,663,Roscosmos,"Site 45/1, Baikonur Cosmodrome, Kazakhstan","Tue Nov 08, 2011 20:16 UTC",Zenit-2 FG | Fobos-Grunt & Yinghuo 1,StatusActive,,Success
